@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from mlp import MLP
 
 # Métrica: acurácia
@@ -59,3 +61,59 @@ def validacao_cruzada(x_treino, k_folds, y_treino, model_params):
         print(f"Fold {i+1}, Acurácia: {acc:.4f}, MSE: {erro:.6f}")
 
     return resultados, erros_por_fold, predicoes_por_fold
+
+
+def matriz_confusao(y_true, y_pred, labels=None):
+    """
+    Parâmetros:
+    y_true (list ou array): Rótulos reais.
+    y_pred (list ou array): Rótulos previstos.
+
+    Retorna:
+    np.ndarray: Matriz de confusão.
+    """
+    
+     #Identificar classes únicas
+    if labels is None:
+        labels = np.unique(np.concatenate((y_true, y_pred)))
+    n_classes = len(labels)
+    
+    # Criar um mapeamento de classe para índice
+    class_to_index = {label: index for index, label in enumerate(labels)}
+    
+    # Inicializar a matriz de confusão
+    matriz = np.zeros((n_classes, n_classes), dtype=int)
+    
+    # Preencher a matriz
+    for real, pred in zip(y_true, y_pred):
+        i = class_to_index[real]
+        j = class_to_index[pred]
+        matriz[i][j] += 1
+    
+    # Criar DataFrame para melhor visualização
+    df_confusao = pd.DataFrame(matriz, index=labels, columns=labels)
+    
+    # Calcular métricas
+    acuracia = np.trace(matriz) / np.sum(matriz)
+    precisao = np.diag(matriz) / np.sum(matriz, axis=0)
+    recall = np.diag(matriz) / np.sum(matriz, axis=1)
+    f1 = 2 * (precisao * recall) / (precisao + recall)
+    
+    # Exibir a matriz de confusão
+    print("Matriz de Confusão:")
+    header = " " * 10 + " ".join(f"{label:^10}" for label in labels)
+    print(header)
+    for i, row in enumerate(matriz):
+        row_str = " ".join(f"{num:^10}" for num in row)
+        print(f"{labels[i]:<10}{row_str}")
+    
+    # Exibir métricas
+    print("Métricas por classe:")
+    for idx, label in enumerate(labels):
+        print(f"Classe {label}:")
+        print(f"  Precisão: {precisao[idx]:.2f}")
+        print(f"  Recall: {recall[idx]:.2f}")
+        print(f"  F1-Score: {f1[idx]:.2f}")
+    print(f"\nAcurácia geral: {acuracia:.2f}")
+    
+    return df_confusao

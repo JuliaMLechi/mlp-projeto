@@ -1,41 +1,61 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from mlp import MLP
-from metricas import cross_validation
+from metricas import acuracia, mse, validacao_cruzada, matriz_confusao
+from sklearn.preprocessing import OneHotEncoder
 
-# (1) Carrega dados (exemplo fictício)
-from sklearn.datasets import load_breast_cancer
-data = load_breast_cancer()
-X = pd.DataFrame(data.data, columns=data.feature_names)
-y = pd.Series(data.target)
 
-# (2) Define parâmetros do modelo
-parametros = {
-    "tamanho_entrada": X.shape[1],
-    "camadas_escondidas": 10,
-    "tamanho_saida": 1,
-    "taxa_aprendizado": 0.01,
-    "epocas": 300
-}
+# Carregar o dataset Iris
+iris = load_iris()
+X = iris.data  # 4 features por flor
+y = iris.target  # 0, 1, 2
 
-# (3) Roda validação cruzada
-accs, mses, preds = cross_validation(MLP, X, y, k_folds=5, model_params=parametros)
+# Dividir entre treino e teste
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-def relatorio_final(self, erros, nome_arquivo="relatorio_final.txt"):
-        """Gera um arquivo de relatório com métricas e pesos finais"""
-        with open(nome_arquivo, "w") as f:
-            f.write("Relatório Final - MLP\n")
-            f.write(f"Épocas: {self.epocas}\n")
-            f.write(f"Taxa de Aprendizado: {self.taxa_aprendizado}\n")
-            f.write(f"Tamanho Entrada: {self.tamanho_entrada}\n")
-            f.write(f"Camadas Ocultas: {self.camadas_escondidas}\n")
-            f.write(f"Tamanho Saída: {self.tamanho_saida}\n\n")
-            f.write("Pesos Iniciais:\n")
-            f.write(f"{self.pesos_entrada}\n{self.pesos_saida}\n")
-            f.write("\nBias Iniciais:\n")
-            f.write(f"{self.bias_entrada}\n{self.bias_saida}\n")
-            f.write("\nErro por Época:\n")
-            for epoca, erro in enumerate(erros):
-                f.write(f"Época {epoca + 1}: Erro = {erro}\n")
-            f.write("\nPesos Finais:\n")
-            f.write(f"{self.pesos_entrada}\n{self.pesos_saida}\n")
+# One-hot encode dos rótulos
+onehot_encoder = OneHotEncoder(sparse_output=False)
+y_train_reshaped = y_train.reshape(-1, 1)
+y_train_onehot = onehot_encoder.fit_transform(y_train_reshaped)
+
+# Definindo os parâmetros da rede
+input_size = X_train.shape[1]  # 4
+hidden_layers = 5  # Pode ser 5 neurônios escondidos
+output_size = len(np.unique(y))  # 3 classes (0, 1, 2)
+
+# Instanciar e treinar a MLP
+mlp = MLP(input_size,hidden_layers, output_size, taxa_aprendizado=0.01, epocas=20000)
+
+print("Iniciando o treinamento...")
+errors = mlp.fit(X_train, y_train_onehot)
+
+# Fazer predições
+y_pred_probs = mlp.predict(X_test)
+y_pred = np.argmax(y_pred_probs, axis=1)  # Pegar a classe de maior probabilidade
+
+# Avaliar
+acc = acuracia(y_test, y_pred)
+print(f"Acurácia no conjunto de teste: {acc * 100:.2f}%")
+
+# Validação Cruzada
+
+validacao_cruzada(x_treino=X_train,
+                  k_folds=5, 
+                  y_treino=y_train_onehot, 
+                  model_params={
+        "tamanho_entrada": input_size,
+        "camadas_escondidas": hidden_layers,
+        "tamanho_saida": output_size,
+        "taxa_aprendizado": 0.01,
+        "epocas": 20000
+    })
+
+matriz_confusao(y_test,y_pred)
+
+
+# Gerar relatório
+mlp.relatorio_final(errors, nome_arquivo="relatorio_final.txt")
+print("Treinamento e teste concluídos.")
