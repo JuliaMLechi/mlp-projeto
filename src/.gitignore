@@ -1,0 +1,11 @@
+# Ignorar bytecode
+__pycache__/
+*.pyc
+
+# Ignorar ambientes virtuais
+.venv/
+venv/
+
+# Ignorar arquivos temporários do sistema
+.DS_Store
+Thumbs.db

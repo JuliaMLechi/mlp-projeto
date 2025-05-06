@@ -55,7 +55,6 @@ validacao_cruzada(x_treino=X_train,
 
 matriz_confusao(y_test,y_pred)
 
-
 # Gerar relatório
 mlp.relatorio_final(errors, nome_arquivo="relatorio_final.txt")
 print("Treinamento e teste concluídos.")
