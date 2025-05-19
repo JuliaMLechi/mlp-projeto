@@ -39,7 +39,7 @@ def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200
         List[Dict]: Lista de dicionários com combinações de hiperparâmetros.
     """
     taxas_aprendizado = [0.01]
-    opcoes_neuronios_escondidas = [32]
+    opcoes_neuronios_escondidas = [64]
 
     combinacoes = []
 
