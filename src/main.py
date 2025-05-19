@@ -1,60 +1,61 @@
 import numpy as np
+import os
 import pandas as pd
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from mlp import MLP
-from metricas import acuracia, mse, validacao_cruzada, matriz_confusao
-from sklearn.preprocessing import OneHotEncoder
+from metricas import acuracia, mse, train_test_split_custom, validacao_cruzada, matriz_confusao, gerar_combinacoes_hiperparametros
 
 
-# Carregar o dataset Iris
-iris = load_iris()
-X = iris.data  # 4 features por flor
-y = iris.target  # 0, 1, 2
+# Carregar o dataset de caracteres
+base_dir = os.path.dirname(__file__)
+X = np.load(os.path.join(base_dir, 'X.npy'))
+y = np.load(os.path.join(base_dir, 'Y_classe.npy'))
 
-# Dividir entre treino e teste
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print("Shape original de X:", X.shape)
 
-# One-hot encode dos rótulos
-onehot_encoder = OneHotEncoder(sparse_output=False)
-y_train_reshaped = y_train.reshape(-1, 1)
-y_train_onehot = onehot_encoder.fit_transform(y_train_reshaped)
+X = X.reshape(X.shape[0], -1)  # Flatten
+print("Shape ajustado de X para a MLP:", X.shape)
 
-# Definindo os parâmetros da rede
-input_size = X_train.shape[1]  # 4
-hidden_layers = 5  # Pode ser 5 neurônios escondidos
-output_size = len(np.unique(y))  # 3 classes (0, 1, 2)
+# Normalizar
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
 
-# Instanciar e treinar a MLP
-mlp = MLP(input_size,hidden_layers, output_size, taxa_aprendizado=0.01, epocas=20000)
+# Dividir dados
+X_train, X_test, y_train, y_test = train_test_split_custom(X, y, tamanho_teste=0.2)
 
-print("Iniciando o treinamento...")
-errors = mlp.fit(X_train, y_train_onehot)
+# Parâmetros da MLP
+input_size = X_train.shape[1]
+hidden_layers = 5
+output_size = 26
 
-# Fazer predições
-y_pred_probs = mlp.predict(X_test)
-y_pred = np.argmax(y_pred_probs, axis=1)  # Pegar a classe de maior probabilidade
+grid_hiperparametros = gerar_combinacoes_hiperparametros(input_size, output_size)
 
-# Avaliar
-acc = acuracia(y_test, y_pred)
-print(f"Acurácia no conjunto de teste: {acc * 100:.2f}%")
+print("Iniciando o treinamento na validação")
 
-# Validação Cruzada
+# Validação cruzada
+best_params_por_fold = validacao_cruzada(
+    x_treino=X_train,
+    k_folds=5,
+    y_treino=y_train,
+    model_combinacoes_hiper=grid_hiperparametros,
+    cross_validation=True
+)
 
-validacao_cruzada(x_treino=X_train,
-                  k_folds=5, 
-                  y_treino=y_train_onehot, 
-                  model_params={
-        "tamanho_entrada": input_size,
-        "camadas_escondidas": hidden_layers,
-        "tamanho_saida": output_size,
-        "taxa_aprendizado": 0.01,
-        "epocas": 20000
-    })
+# Treino com a melhor combinação
 
-matriz_confusao(y_test,y_pred)
+modelo = MLP(**best_params_por_fold)
+modelo.fit(X_train, y_train)
 
-# Gerar relatório
-mlp.relatorio_final(errors, nome_arquivo="relatorio_final.txt")
+y_pred = modelo.predict(X_test)
+
+y_validacao_labels = np.argmax(y_test, axis=1)
+y_pred_labels = np.argmax(y_pred, axis=1)
+
+acc = acuracia(y_validacao_labels, y_pred_labels)
+errors = mse(y_validacao_labels, y_pred_labels)
+
+# Gerar plot 
+matriz_confusao(y_test, y_pred)
+modelo.relatorio_final(errors, X_test, y_test)
+
 print("Treinamento e teste concluídos.")

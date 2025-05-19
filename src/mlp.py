@@ -5,7 +5,7 @@ import random
 # Vamos usar o random para inicializar os pesos com valores aleatórios, o que garante que a rede não comece sempre do mesmo jeito
 
 class MLP:
-    def __init__(self, tamanho_entrada, camadas_escondidas, tamanho_saida, taxa_aprendizado=0.01, epocas=1000):
+    def __init__(self, tamanho_entrada, camadas_escondidas, tamanho_saida, taxa_aprendizado=0.01, epocas=1000, parada_antecipada=True):
         """
         Inicializa a rede MLP com os parâmetros fornecidos.
 
@@ -21,12 +21,19 @@ class MLP:
         self.tamanho_entrada = tamanho_entrada
         self.camadas_escondidas = camadas_escondidas
         self.tamanho_saida = tamanho_saida
+        self.parada_antecipada = parada_antecipada
 
         # Inicialização dos pesos e bias com valores aleatórios entre -1 e 1
         self.pesos_entrada = np.random.uniform(-1, 1, size=(self.tamanho_entrada, self.camadas_escondidas))
         self.pesos_saida = np.random.uniform(-1, 1, size=(self.camadas_escondidas, self.tamanho_saida))
         self.bias_entrada = np.random.uniform(-1, 1, size=(1, self.camadas_escondidas))
         self.bias_saida = np.random.uniform(-1, 1, size=(1, self.tamanho_saida))
+
+        with open("pesosiniciais.txt", "w") as f:
+            f.write("Pesos Iniciais:\n")
+            f.write(f"{self.pesos_entrada}\n{self.pesos_saida}\n")
+            f.write("\nBias Iniciais:\n")
+            f.write(f"{self.bias_entrada}\n{self.bias_saida}\n")
 
     def funcao_ativacao(self, z):
         """Função de ativação sigmoide"""
@@ -61,6 +68,7 @@ class MLP:
 
     def fit(self, X, y):
         """Treina a rede com base nos dados de entrada"""
+
         erros = []
         melhor_erro = np.inf
         paciencia = 10
@@ -74,18 +82,19 @@ class MLP:
             perda = np.mean(np.square(erro))
             erros.append(perda)
 
-            if epoca % 100 == 0:
-                print(f"Época {epoca}/{self.epocas}, Erro: {perda:.6f}")
+            if self.parada_antecipada:
+                if epoca % 100 == 0:
+                    print(f"Época {epoca}/{self.epocas}, Erro: {perda:.6f}")
 
-            if perda < melhor_erro:
-                melhor_erro = perda
-                epocas_sem_melhora = 0
-            else:
-                epocas_sem_melhora += 1
+                if perda < melhor_erro:
+                    melhor_erro = perda
+                    epocas_sem_melhora = 0
+                else:
+                    epocas_sem_melhora += 1
 
-            if epocas_sem_melhora >= paciencia:
-                print(f"Parada antecipada na época {epoca}")
-                break
+                if epocas_sem_melhora >= paciencia:
+                    print(f"Parada antecipada na época {epoca}")
+                    break
         return erros
 
     def predict(self, X):
@@ -93,21 +102,54 @@ class MLP:
         y_pred, _, _, _ = self.forward(X)
         return y_pred
 
-    def relatorio_final(self, erros, nome_arquivo="relatorio_final.txt"):
-        """Gera um arquivo de relatório com métricas e pesos finais"""
-        with open(nome_arquivo, "w") as f:
-            f.write("Relatório Final - MLP\n")
-            f.write(f"Épocas: {self.epocas}\n")
-            f.write(f"Taxa de Aprendizado: {self.taxa_aprendizado}\n")
+    def relatorio_final(self, erros, X_test=None, y_test=None):
+        """Arquivos de saída úteis para o seu trabalho:
+            ● Um arquivo contendo os hiperparâmetros finais da arquitetura da rede neural e
+            hiperparâmetros de inicialização. VER
+            ● Um arquivo contendo os pesos iniciais da rede. 
+            ● Um arquivo contendo os pesos finais da rede.
+            ● Um arquivo contendo o erro cometido pela rede neural em cada iteração do
+            treinamento.
+            ● Um arquivo contendo as saídas produzidas pela rede neural para cada um dos
+            dados de teste realizados VER
+        """
+        # Salvando hiperparâmetros finais
+        with open("hiperparametros.txt", "w") as f:
+            f.write("Hiperparâmetros Finais e de Inicialização\n")
             f.write(f"Tamanho Entrada: {self.tamanho_entrada}\n")
             f.write(f"Camadas Ocultas: {self.camadas_escondidas}\n")
             f.write(f"Tamanho Saída: {self.tamanho_saida}\n\n")
-            f.write("Pesos Iniciais:\n")
+            f.write(f"Tamanho Taxa de aprendizado: {self.taxa_aprendizado}\n\n")
+
+        # Salvando pesos finais
+        with open("pesosfinais.txt", "w") as f:
+            f.write("\nPesos Finais:\n")
             f.write(f"{self.pesos_entrada}\n{self.pesos_saida}\n")
-            f.write("\nBias Iniciais:\n")
-            f.write(f"{self.bias_entrada}\n{self.bias_saida}\n")
+            
+        # Salvando erro por época
+        with open("erro.txt", "w") as f:
+            f.write(f"Épocas: {self.epocas}\n")
             f.write("\nErro por Época:\n")
             for epoca, erro in enumerate(erros):
                 f.write(f"Época {epoca + 1}: Erro = {erro}\n")
-            f.write("\nPesos Finais:\n")
-            f.write(f"{self.pesos_entrada}\n{self.pesos_saida}\n")
+
+        # Verificando se os dados de teste foram passados
+        if X_test is not None and y_test is not None:
+            # Verificando se y_test é one-hot encoded ou rótulos diretos
+            if y_test.ndim == 1:
+                y_true = y_test  # Se já for um vetor de rótulos, usamos diretamente
+            else:
+                y_true = np.argmax(y_test, axis=1)  # Caso seja one-hot encoded
+
+            # Predição da rede
+            y_pred_probs = self.predict(X_test)
+            y_pred = np.argmax(y_pred_probs, axis=1)
+
+            # Salvando saídas de teste
+            with open("saidas_teste.txt", "w") as f:
+                for i in range(len(X_test)):
+                    f.write(f"Instância {i}:\n")
+                    f.write(f"Entrada: {X_test[i]}\n")
+                    f.write(f"Classe verdadeira: {y_true[i]}\n")
+                    f.write(f"Saída da rede: {y_pred_probs[i]}\n")
+                    f.write(f"Classe predita: {y_pred[i]}\n\n")
