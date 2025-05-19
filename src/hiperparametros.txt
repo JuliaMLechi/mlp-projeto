@@ -1,6 +1,6 @@
 Hiperparâmetros Finais e de Inicialização
 Tamanho Entrada: 120
-Camadas Ocultas: 64
+Camadas Ocultas: 32
 Tamanho Saída: 26
 
 Tamanho Taxa de aprendizado: 0.01

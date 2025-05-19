@@ -26,7 +26,7 @@ def mse(y_verdadeiro, y_predito):
 
 # Função de validação cruzada
 
-def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=20000):
+def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200):
     """
     Gera uma lista de combinações de hiperparâmetros com taxas de aprendizado e camadas escondidas fixadas internamente.
 
@@ -39,7 +39,7 @@ def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200
         List[Dict]: Lista de dicionários com combinações de hiperparâmetros.
     """
     taxas_aprendizado = [0.01]
-    opcoes_camadas_escondidas = [128]
+    opcoes_camadas_escondidas = [32]
 
     combinacoes = []
 
@@ -227,3 +227,25 @@ def matriz_confusao(y_true, y_pred, labels=None, exibir_plot=True):
         plt.savefig("matriz_confusao.png", dpi=300)
     
     return df_confusao
+
+def plotar_convergencia_erro(erros, salvar_em="convergencia_erro.png", exibir=True):
+    """
+    Gera o gráfico da convergência do erro ao longo das épocas.
+
+    Parâmetros:
+    - erros (list): Lista com os valores do erro em cada época.
+    - salvar_em (str): Caminho do arquivo para salvar a imagem do gráfico.
+    - exibir (bool): Se True, exibe o gráfico na tela.
+    """
+    plt.figure(figsize=(8, 4))
+    plt.plot(erros, label="Erro por época", color='blue')
+    plt.xlabel("Épocas")
+    plt.ylabel("Erro quadrático médio")
+    plt.title("Convergência do Erro durante o Treinamento")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(salvar_em, dpi=300)
+
+    if exibir:
+        plt.show()

@@ -5,7 +5,7 @@ import random
 # Vamos usar o random para inicializar os pesos com valores aleatórios, o que garante que a rede não comece sempre do mesmo jeito
 
 class MLP:
-    def __init__(self, tamanho_entrada, camadas_escondidas, tamanho_saida, taxa_aprendizado=0.01, epocas=2000, parada_antecipada=False):
+    def __init__(self, tamanho_entrada, camadas_escondidas, tamanho_saida, taxa_aprendizado=0.01, epocas=2000, parada_antecipada=True):
         """
         Inicializa a rede MLP com os parâmetros fornecidos.
 
