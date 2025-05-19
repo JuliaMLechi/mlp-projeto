@@ -30,7 +30,7 @@ print(f"- Teste:       {X_test.shape}")
 
 # Parâmetros da MLP
 input_size = X_train.shape[1]
-hidden_layers = 5
+hidden_layers = 1
 output_size = 26
 
 # Mostrar hiperparâmetros escolhidos

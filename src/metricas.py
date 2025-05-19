@@ -26,7 +26,7 @@ def mse(y_verdadeiro, y_predito):
 
 # Função de validação cruzada
 
-def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200):
+def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=20000):
     """
     Gera uma lista de combinações de hiperparâmetros com taxas de aprendizado e camadas escondidas fixadas internamente.
 
@@ -39,19 +39,19 @@ def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200
         List[Dict]: Lista de dicionários com combinações de hiperparâmetros.
     """
     taxas_aprendizado = [0.01]
-    opcoes_camadas_escondidas = [32]
+    opcoes_neuronios_escondidas = [32]
 
     combinacoes = []
 
     for taxa in taxas_aprendizado:
-        for camadas in opcoes_camadas_escondidas:
+        for camadas in opcoes_neuronios_escondidas:
             parametros = {
                 "tamanho_entrada": tamanho_entrada,
                 "camadas_escondidas": camadas,
                 "tamanho_saida": tamanho_saida,
                 "taxa_aprendizado": taxa,
                 "epocas": epocas,
-                "parada_antecipada": True
+                "parada_antecipada": False
             }
             combinacoes.append(parametros)
 

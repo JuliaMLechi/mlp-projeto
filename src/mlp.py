@@ -83,10 +83,10 @@ class MLP:
             erros.append(perda)
 
             if self.parada_antecipada:
-                if epoca % 100 == 0:
+                if epoca % 100 == 0 or epoca == self.epocas - 1:
                     print(f"Época {epoca}/{self.epocas}, Erro: {perda:.6f}")
 
-                if perda < melhor_erro:
+                if perda < melhor_erro - 1e-6:
                     melhor_erro = perda
                     epocas_sem_melhora = 0
                 else:
