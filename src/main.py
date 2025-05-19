@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
+import time
 from sklearn.preprocessing import StandardScaler
 from mlp import MLP
 from metricas import acuracia, mse, train_test_split_custom, validacao_cruzada, matriz_confusao, gerar_combinacoes_hiperparametros
@@ -38,13 +39,13 @@ best_params_por_fold = validacao_cruzada(
     k_folds=5,
     y_treino=y_train,
     model_combinacoes_hiper=grid_hiperparametros,
-    cross_validation=True
+    cross_validation=False
 )
 
 # Treino com a melhor combinação
 
 modelo = MLP(**best_params_por_fold)
-modelo.fit(X_train, y_train)
+errors = modelo.fit(X_train, y_train)  # <-- aqui está a lista de erros por época
 
 y_pred = modelo.predict(X_test)
 
@@ -52,7 +53,7 @@ y_validacao_labels = np.argmax(y_test, axis=1)
 y_pred_labels = np.argmax(y_pred, axis=1)
 
 acc = acuracia(y_validacao_labels, y_pred_labels)
-errors = mse(y_validacao_labels, y_pred_labels)
+
 
 # Gerar plot 
 matriz_confusao(y_test, y_pred)

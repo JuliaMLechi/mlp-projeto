@@ -26,34 +26,34 @@ def mse(y_verdadeiro, y_predito):
 
 # Função de validação cruzada
 
-def gerar_combinacoes_hiperparametros(input_size, output_size, epocas=20000):
+def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=20000):
     """
     Gera uma lista de combinações de hiperparâmetros com taxas de aprendizado e camadas escondidas fixadas internamente.
 
-    Parâmetros:
-        input_size (int): Tamanho da entrada do modelo.
-        output_size (int): Tamanho da saída do modelo.
-        epocas (int): Número de épocas para treinamento. Default = 20000.
+   Parâmetros:
+        tamanho_entrada (int): Tamanho da entrada do modelo.
+        tamanho_saida (int): Tamanho da saída do modelo.
+        epocas (int): Número de épocas para treinamento. Padrão = 20000.
 
     Retorno:
         List[Dict]: Lista de dicionários com combinações de hiperparâmetros.
     """
-    learning_rates = [0.01, 0.005]
-    hidden_layer_options = [ 32, 64, 128 ]
+    taxas_aprendizado = [0.01]
+    opcoes_camadas_escondidas = [128]
 
     combinacoes = []
 
-    for taxa in learning_rates:
-        for camadas in hidden_layer_options:
-            params = {
-                "tamanho_entrada": input_size,
+    for taxa in taxas_aprendizado:
+        for camadas in opcoes_camadas_escondidas:
+            parametros = {
+                "tamanho_entrada": tamanho_entrada,
                 "camadas_escondidas": camadas,
-                "tamanho_saida": output_size,
+                "tamanho_saida": tamanho_saida,
                 "taxa_aprendizado": taxa,
                 "epocas": epocas,
                 "parada_antecipada": True
             }
-            combinacoes.append(params)
+            combinacoes.append(parametros)
 
     return combinacoes
 
