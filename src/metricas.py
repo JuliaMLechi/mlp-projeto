@@ -52,7 +52,7 @@ def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200
                 "tamanho_saida": tamanho_saida,
                 "taxa_aprendizado": taxa,
                 "epocas": epocas,
-                "parada_antecipada": True
+                "parada_antecipada": False
             }
             combinacoes.append(parametros)
 
