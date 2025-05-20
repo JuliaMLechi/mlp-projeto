@@ -4,7 +4,7 @@ import pandas as pd
 import time
 from sklearn.preprocessing import StandardScaler
 from mlp import MLP
-from metricas import acuracia, mse, train_test_split_custom, validacao_cruzada, matriz_confusao, gerar_combinacoes_hiperparametros, plotar_convergencia_erro
+from metricas import acuracia, mse, train_test_split_custom, validacao_cruzada, matriz_confusao, gerar_combinacoes_hiperparametros, plotar_convergencia_erro, plot_convergencia_pesos
 
 
 # Carregar o dataset de caracteres
@@ -46,7 +46,7 @@ best_params_por_fold = validacao_cruzada(
     k_folds=5,
     y_treino=y_train,
     model_combinacoes_hiper=grid_hiperparametros,
-    cross_validation=False
+    cross_validation=True
 )
 
 # Treino com a melhor combinação
@@ -56,7 +56,7 @@ errors = modelo.fit(X_train, y_train)
 fim = time.time()
 
 tempo_treino = fim - inicio
-print(f"⏱️ Tempo de treinamento: {tempo_treino:.2f} segundos")
+print(f" Tempo de treinamento: {tempo_treino:.2f} segundos")
 print("Iniciando o teste na validação")
 
 #Teste
@@ -76,3 +76,8 @@ plotar_convergencia_erro(errors)
 
 print("Treinamento e teste concluídos.")
 
+plot_convergencia_pesos(
+    iniciais_path='pesosiniciais.txt',
+    finais_path='pesosfinais.txt',
+    hist_path='hist_pesos.png'
+)

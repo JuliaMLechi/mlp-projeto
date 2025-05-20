@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from mlp import MLP
+import re
 
 # Métrica: acurácia
 
@@ -39,7 +40,7 @@ def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200
         List[Dict]: Lista de dicionários com combinações de hiperparâmetros.
     """
     taxas_aprendizado = [0.01]
-    opcoes_neuronios_escondidas = [128]
+    opcoes_neuronios_escondidas = [32]
 
     combinacoes = []
 
@@ -51,7 +52,7 @@ def gerar_combinacoes_hiperparametros(tamanho_entrada, tamanho_saida, epocas=200
                 "tamanho_saida": tamanho_saida,
                 "taxa_aprendizado": taxa,
                 "epocas": epocas,
-                "parada_antecipada": False
+                "parada_antecipada": True
             }
             combinacoes.append(parametros)
 
@@ -112,6 +113,10 @@ def validacao_cruzada(x_treino, k_folds, y_treino, model_combinacoes_hiper, cros
 
         x_validacao_fold = df_validacao.iloc[:, :x_treino.shape[1]].values
         y_validacao_fold = df_validacao.iloc[:, x_treino.shape[1]:].values
+        
+        # extrai índices numéricos para o log
+        train_idx = df_treino.index.to_numpy()
+        val_idx   = df_validacao.index.to_numpy()
 
         acc_best = 0
         erro_best = 0
@@ -145,8 +150,15 @@ def validacao_cruzada(x_treino, k_folds, y_treino, model_combinacoes_hiper, cros
 
         if not cross_validation:
             break
+        
+        n_epocas = best_params.get('epocas', modelo.epocas)
 
-        print(f"Fold {i+1}, Acurácia: {acc_best:.4f}, MSE: {erro_best:.6f}")
+        print(f"Fold {i+1}/{k_folds}")
+        print(f"  • Conjuntos: Train[{train_idx.min()}–{train_idx.max()}], "
+            f"Val[{val_idx.min()}–{val_idx.max()}]")
+        print(f"  • Erro MSE final: {erro_best:.4f}")
+        print(f"  • Taxa de classificação errada: {(1-acc_best)*100:.1f}%"
+            f"  →  Acurácia: {acc_best*100:.1f}%\n")
 
     best_acc_fold = max(resultados)
     idx = resultados.index(best_acc_fold)
@@ -249,3 +261,40 @@ def plotar_convergencia_erro(erros, salvar_em="convergencia_erro.png", exibir=Tr
 
     if exibir:
         plt.show()
+        
+def _carregar_pesos(path):
+    """Lê um arquivo .txt e retorna um vetor 1D de floats."""
+    with open(path, 'r') as f:
+        text = f.read()
+    nums = re.findall(r'-?\d+\.?\d*(?:e[+-]?\d+)?', text)
+    return np.array(nums, dtype=float)
+
+def plot_convergencia_pesos(iniciais_path: str, finais_path: str,
+                            scatter_path: str = 'convergencia_scatter.png',
+                            hist_path: str    = 'convergencia_hist.png'):
+    """
+    Gera e salva dois gráficos em PNG:
+      1) Scatter: Peso Inicial × Peso Final
+      2) Histogramas comparativos das distribuições
+    """
+    # Este código deve estar indentado em 4 espaços, não 5 ou 3
+    w_init = _carregar_pesos(iniciais_path)
+    w_final = _carregar_pesos(finais_path)
+
+    # Ajuste de tamanho
+    if w_init.size != w_final.size:
+        min_len = min(w_init.size, w_final.size)
+        w_init = w_init[:min_len]
+        w_final = w_final[:min_len]
+
+   # Histograma comparativo
+    plt.figure(figsize=(7,4))
+    plt.hist(w_init, bins=50, alpha=0.6, label='Inicial')
+    plt.hist(w_final, bins=50, alpha=0.6, label='Final')
+    plt.legend()
+    plt.xlabel('Valor do Peso')
+    plt.ylabel('Frequência')
+    plt.title('Distribuição de Pesos: Antes e Depois do Treino')
+    plt.tight_layout()
+    plt.savefig(hist_path, dpi=300)
+    plt.close()
